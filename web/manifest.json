@@ -1,6 +1,6 @@
 {
-    "name": "calendario",
-    "short_name": "calendario",
+    "name": "calendario_festividades",
+    "short_name": "calendario_festividades",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
