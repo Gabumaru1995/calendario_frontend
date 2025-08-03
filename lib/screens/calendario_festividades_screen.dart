@@ -22,8 +22,13 @@ class _CalendarioFestividadesScreenState
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  //definiendo provincia y canton
   Canton? _cantoneseleccionada;
   List<Canton> _cantones = [];
+
+  List<Provincia> _provincias = [];
+  Provincia? _provinciaSeleccionada;
+  ////////////////////////////////////
   Map<DateTime, List<Festividad>> _eventos = {};
   Map<DateTime, List<Recordatorio>> _recordatorios = {};
 
@@ -33,8 +38,37 @@ class _CalendarioFestividadesScreenState
     _selectedDay = _focusedDay;
     _cargarCantones();
     _cargarRecordatorios();
+    _cargarProvincias();
   }
 
+  /////////////////////////////////////
+  void _cargarProvincias() async {
+    try {
+      final provincias = await apiService.obtenerProvincias();
+      setState(() {
+        _provincias = provincias;
+      });
+    } catch (e) {
+      // manejar error
+    }
+  }
+
+  ////////////////////////////////////////
+  void _cargarCantonesPorProvincia(int idProvincia) async {
+    try {
+      final cantones = await apiService.obtenerCantonesPorProvincia(
+        idProvincia,
+      );
+      setState(() {
+        _cantones = cantones;
+        _cantoneseleccionada = null;
+      });
+    } catch (e) {
+      // manejar error
+    }
+  }
+
+  //////////////////////////////////////////
   Future<void> _cargarCantones() async {
     final data = await apiService.obtenerCantones();
     setState(() {
@@ -278,32 +312,60 @@ class _CalendarioFestividadesScreenState
         child: ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           children: [
-            // — Dropdown de provincias —
-            DropdownButton<Canton>(
+            ///////////////////////////////////////////////////////////////////////
+            DropdownButton<Provincia>(
               dropdownColor: Colors.black87,
-              value: _cantoneseleccionada,
+              value: _provinciaSeleccionada,
               isExpanded: true,
               style: const TextStyle(color: Colors.white),
+              hint: const Text(
+                'Selecciona una provincia',
+                style: TextStyle(color: Colors.white70),
+              ),
               underline: Container(height: 1, color: Colors.white24),
               items:
-                  _cantones
-                      .map(
-                        (prov) => DropdownMenuItem(
-                          value: prov,
-                          child: Text(prov.nombre),
-                        ),
-                      )
-                      .toList(),
-              onChanged: (n) {
+                  _provincias.map((prov) {
+                    return DropdownMenuItem(
+                      value: prov,
+                      child: Text(prov.nombre),
+                    );
+                  }).toList(),
+              onChanged: (provincia) {
                 setState(() {
-                  _cantoneseleccionada = n;
-                  _cargarEventos();
+                  _provinciaSeleccionada = provincia;
+                  //_cargarCantonesPorProvincia(provincia!.id);
+                  _cantones = provincia?.cantones ?? [];
+                  _cantoneseleccionada = null;
                 });
               },
             ),
-
-            const SizedBox(height: 12),
-
+            ////////////////////////////////////////////////////////////////////////////////
+            if (_cantones.isNotEmpty)
+              DropdownButton<Canton>(
+                dropdownColor: Colors.black87,
+                value: _cantoneseleccionada,
+                isExpanded: true,
+                style: const TextStyle(color: Colors.white),
+                hint: const Text(
+                  'Selecciona un cantón',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                underline: Container(height: 1, color: Colors.white24),
+                items:
+                    _cantones.map((canton) {
+                      return DropdownMenuItem(
+                        value: canton,
+                        child: Text(canton.nombre),
+                      );
+                    }).toList(),
+                onChanged: (canton) {
+                  setState(() {
+                    _cantoneseleccionada = canton;
+                    _cargarEventos(); // aquí podrías filtrar por cantón
+                  });
+                },
+              ),
+            /////////////////////////////////////////////////////////////////////////////////////////////////
             // — Calendario —
             Container(
               decoration: BoxDecoration(

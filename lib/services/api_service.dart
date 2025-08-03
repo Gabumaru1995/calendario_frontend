@@ -5,9 +5,31 @@ import '../models/canton.dart';
 import '../models/festividad.dart';
 import '../models/recordatorio.dart';
 
-class ApiService {
   final String baseUrl = 'http://localhost:8080'; // cambia si estás en emulador o red real
 
+  class ApiService {
+  Future<List<Provincia>> obtenerProvincias() async {
+    final response = await http.get(Uri.parse('$baseUrl/provincias'));
+    if (response.statusCode == 200) {
+      final utf8Body = utf8.decode(response.bodyBytes);
+      final List<dynamic> data = jsonDecode(utf8Body);
+      return data.map((json) => Provincia.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al cargar provincias');
+    }
+  }
+
+  Future<List<Canton>> obtenerCantonesPorProvincia(int idProvincia) async {
+    final response = await http.get(Uri.parse('$baseUrl/cantones/provincia/$idProvincia'));
+    if (response.statusCode == 200) {
+      final utf8Body = utf8.decode(response.bodyBytes);
+      final List<dynamic> data = jsonDecode(utf8Body);
+      return data.map((json) => Canton.fromJson(json)).toList();
+    } else {
+      throw Exception('Error al cargar cantones por provincia');
+    }
+  }
+  
   Future<List<Canton>> obtenerCantones() async {
     final response = await http.get(Uri.parse('$baseUrl/cantones'));
 
